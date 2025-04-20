@@ -1,27 +1,33 @@
 #!/bin/bash
 
-# ==========================================
-# 脚本作者：K2 节点教程分享
-# 推特地址：https://x.com/BtcK241918
-# 订阅电报频道：https://t.me/+EaCiFDOghoM3Yzll
-# ==========================================
+clear
 
+# 显示主菜单
 while true; do
     echo ""
     echo "============== 一键部署脚本 =============="
+    echo "脚本作者：K2 节点教程分享"
+    echo "推特地址：https://x.com/BtcK241918"
+    echo "订阅电报频道：https://t.me/+EaCiFDOghoM3Yzll"
+    echo "==========================================="
     echo "1. 安装基础环境并启动项目"
     echo "2. 安装并配置 ngrok（并启用端口转发）"
     echo "3. 查看 ngrok 会话"
     echo "4. 查看 gensyn 会话"
     echo "5. 查看身份备份文件"
     echo "6. 退出"
-    echo "=========================================="
+    echo "==========================================="
+    
+    # 输入验证
     read -p "请输入选项（1-6）: " choice
+    while [[ ! "$choice" =~ ^[1-6]$ ]]; do
+        echo "❌ 请输入有效的选项（1-6）"
+        read -p "请输入选项（1-6）: " choice
+    done
 
     case "$choice" in
         1)
             echo ">>> 开始安装基础环境和项目..."
-
             # 安装依赖（已安装则跳过）
             for pkg in python3 python3-venv python3-pip curl screen git; do
                 dpkg -s $pkg &>/dev/null || sudo apt install -y $pkg
@@ -29,7 +35,7 @@ while true; do
 
             # 安装 Yarn
             if ! command -v yarn &>/dev/null; then
-                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - 
+                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
                 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
                 sudo apt update && sudo apt install -y yarn
             fi
@@ -51,13 +57,12 @@ while true; do
 
         2)
             echo ">>> 开始安装并配置 ngrok（并启用端口转发）..."
-
             if ! command -v ngrok &>/dev/null; then
                 cd ~
                 wget -q https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
                 tar -xf ngrok-v3-stable-linux-amd64.tgz
                 sudo mv ngrok /usr/local/bin/
-                rm ngrok-v3-stable-linux-amd64.tgz
+                rm -f ngrok-v3-stable-linux-amd64.tgz
             fi
 
             # 检查是否已有 ngrok screen 会话
