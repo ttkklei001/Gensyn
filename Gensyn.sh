@@ -12,15 +12,14 @@ while true; do
     echo "==========================================="
     echo "1. 安装基础环境并启动项目"
     echo "2. 查看 gensyn 会话"
-    echo "3. 查看身份备份文件"
-    echo "4. 退出"
+    echo "3. 退出"
     echo "==========================================="
 
     # 输入验证
-    read -p "请输入选项（1-4）: " choice
-    while [[ ! "$choice" =~ ^[1-4]$ ]]; do
-        echo "❌ 请输入有效的选项（1-4）"
-        read -p "请输入选项（1-4）: " choice
+    read -p "请输入选项（1-3）: " choice
+    while [[ ! "$choice" =~ ^[1-3]$ ]]; do
+        echo "❌ 请输入有效的选项（1-3）"
+        read -p "请输入选项（1-3）: " choice
     done
 
     case "$choice" in
@@ -63,22 +62,12 @@ while true; do
             ;;
 
         3)
-            echo ">>> 以下为备份的身份文件内容（位于 ~/backup）："
-            for file in ~/backup/*; do
-                echo "------------ $(basename $file) ------------"
-                cat "$file"
-                echo ""
-            done
-            read -n 1 -s -r -p "按任意键返回主菜单..."
-            ;;
-
-        4)
             echo "👋 已退出脚本"
             exit 0
             ;;
 
         *)
-            echo "❌ 无效输入，请输入 1~4"
+            echo "❌ 无效输入，请输入 1~3"
             ;;
     esac
 done
