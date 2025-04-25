@@ -12,14 +12,15 @@ while true; do
     echo "==========================================="
     echo "1. 安装基础环境并启动项目"
     echo "2. 查看 gensyn 会话"
-    echo "3. 退出"
+    echo "3. 重启 gensyn 会话"
+    echo "4. 退出"
     echo "==========================================="
 
     # 输入验证
-    read -p "请输入选项（1-3）: " choice
-    while [[ ! "$choice" =~ ^[1-3]$ ]]; do
-        echo "❌ 请输入有效的选项（1-3）"
-        read -p "请输入选项（1-3）: " choice
+    read -p "请输入选项（1-4）: " choice
+    while [[ ! "$choice" =~ ^[1-4]$ ]]; do
+        echo "❌ 请输入有效的选项（1-4）"
+        read -p "请输入选项（1-4）: " choice
     done
 
     case "$choice" in
@@ -62,12 +63,30 @@ while true; do
             ;;
 
         3)
+            echo ">>> 正在重启 gensyn 会话..."
+
+            # 杀掉旧会话
+            if screen -list | grep -q "gensyn"; then
+                screen -S gensyn -X quit
+                echo "🛑 已终止旧的 gensyn 会话"
+            fi
+
+            # 回到项目目录
+            cd ~/rl-swarm || { echo "❌ 未找到 rl-swarm 项目目录"; read -n 1 -s -r -p "按任意键返回主菜单..."; continue; }
+
+            # 重启项目
+            screen -S gensyn -dm bash -c "source .venv/bin/activate && ./run_rl_swarm.sh; exec bash"
+            echo "✅ gensyn 会话已重启"
+            read -n 1 -s -r -p "按任意键返回主菜单..."
+            ;;
+
+        4)
             echo "👋 已退出脚本"
             exit 0
             ;;
 
         *)
-            echo "❌ 无效输入，请输入 1~3"
+            echo "❌ 无效输入，请输入 1~4"
             ;;
     esac
 done
