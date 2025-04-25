@@ -26,6 +26,7 @@ while true; do
     case "$choice" in
         1)
             echo ">>> 开始安装基础环境和项目..."
+
             # 安装依赖（已安装则跳过）
             for pkg in python3 python3-venv python3-pip curl screen git; do
                 dpkg -s $pkg &>/dev/null || sudo apt install -y $pkg
@@ -46,10 +47,16 @@ while true; do
             # 克隆项目
             rm -rf rl-swarm && git clone https://github.com/zunxbt/rl-swarm.git && cd rl-swarm
 
-            # 安装 protobuf 稳定版本
+            # 安装 protobuf
             pip install "protobuf==4.25.3"
 
-            # 启动 Python 虚拟环境并在 screen 中运行，保持不退出
+            # 下载 run_rl_swarm.sh 脚本
+            curl -O https://raw.githubusercontent.com/zunxbt/rl-swarm/refs/heads/main/run_rl_swarm.sh
+
+            # 给脚本执行权限
+            chmod +x run_rl_swarm.sh
+
+            # 启动虚拟环境并运行脚本
             screen -S gensyn -dm bash -c "python3 -m venv .venv && source .venv/bin/activate && ./run_rl_swarm.sh; exec bash"
 
             echo "✅ 项目已在 screen 会话 gensyn 中启动，可用 'screen -r gensyn' 查看"
@@ -65,7 +72,7 @@ while true; do
         3)
             echo ">>> 正在重启 gensyn 会话..."
 
-            # 杀掉旧会话
+            # 关闭旧会话
             if screen -list | grep -q "gensyn"; then
                 screen -S gensyn -X quit
                 echo "🛑 已终止旧的 gensyn 会话"
@@ -74,7 +81,7 @@ while true; do
             # 回到项目目录
             cd ~/rl-swarm || { echo "❌ 未找到 rl-swarm 项目目录"; read -n 1 -s -r -p "按任意键返回主菜单..."; continue; }
 
-            # 重启项目
+            # 重启虚拟环境并运行脚本
             screen -S gensyn -dm bash -c "source .venv/bin/activate && ./run_rl_swarm.sh; exec bash"
             echo "✅ gensyn 会话已重启"
             read -n 1 -s -r -p "按任意键返回主菜单..."
