@@ -28,12 +28,24 @@ while true; do
         1)
             echo ">>> 开始安装基础环境和项目..."
 
+            # 检查并安装基础依赖
             for pkg in python3 python3-venv python3-pip curl screen git; do
                 dpkg -s $pkg &>/dev/null || sudo apt install -y $pkg
             done
 
+            # 检查并更新 git
+            current_git_version=$(git --version | awk '{print $3}')
+            latest_git_version=$(apt-cache show git | grep Version | head -n 1 | awk '{print $2}')
+            if [ "$current_git_version" != "$latest_git_version" ]; then
+                echo ">>> git 不是最新版本，正在更新..."
+                sudo apt update && sudo apt install --only-upgrade git
+            else
+                echo ">>> git 已是最新版本"
+            fi
+
+            # 安装 yarn 和 nodejs
             if ! command -v yarn &>/dev/null; then
-                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+                curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - 
                 echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
                 sudo apt update && sudo apt install -y yarn
             fi
@@ -48,16 +60,31 @@ while true; do
                 cd rl-swarm && git pull
             fi
 
+            # 安装指定版本的 protobuf
             pip install "protobuf==4.25.3"
 
+            # 如果有旧的 gensyn 会话，则先删除
             if screen -list | grep -q "gensyn"; then
                 screen -S gensyn -X quit
                 echo "🛑 已终止旧的 gensyn 会话"
             fi
 
-            screen -S gensyn -dm bash -c "python3 -m venv .venv && source .venv/bin/activate && ./run_rl_swarm.sh; exec bash"
+            # 删除旧的虚拟环境（如果存在）
+            if [ -d ".venv" ]; then
+                rm -rf .venv
+                echo "🛑 已删除旧的虚拟环境"
+            fi
 
-            echo "✅ 项目已在 screen 会话 gensyn 中启动，可用 'screen -r gensyn' 查看"
+            # 启动新的 gensyn 会话并执行命令：创建虚拟环境、激活虚拟环境、安装依赖、执行脚本
+            screen -S gensyn -dm bash -c "
+                python3 -m venv .venv && 
+                source .venv/bin/activate && 
+                pip install -r requirements.txt && 
+                ./run_rl_swarm.sh
+                exec bash
+            "
+
+            echo ">>> gensyn 会话已启动，使用 'screen -r gensyn' 查看"
             read -n 1 -s -r -p "按任意键返回主菜单..."
             ;;
 
@@ -76,7 +103,19 @@ while true; do
 
             cd ~/rl-swarm || { echo "❌ 未找到 rl-swarm 项目目录"; read -n 1 -s -r -p "按任意键返回主菜单..."; continue; }
 
-            screen -S gensyn -dm bash -c "source .venv/bin/activate && ./run_rl_swarm.sh; exec bash"
+            # 删除旧的虚拟环境（如果存在）
+            if [ -d ".venv" ]; then
+                rm -rf .venv
+                echo "🛑 已删除旧的虚拟环境"
+            fi
+
+            screen -S gensyn -dm bash -c "
+                python3 -m venv .venv && 
+                source .venv/bin/activate && 
+                pip install -r requirements.txt && 
+                ./run_rl_swarm.sh
+                exec bash
+            "
             echo "✅ gensyn 会话已重启"
             read -n 1 -s -r -p "按任意键返回主菜单..."
             ;;
@@ -113,5 +152,6 @@ while true; do
             echo "👋 已退出脚本"
             exit 0
             ;;
+
     esac
 done
